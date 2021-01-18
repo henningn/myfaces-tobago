@@ -16,6 +16,7 @@
  */
 
 import resolve from "rollup-plugin-node-resolve"
+import replace from '@rollup/plugin-replace';
 
 export default {
   input: 'dist/js/tobago-all.js',
@@ -26,6 +27,9 @@ export default {
     name: 'tobago'
   },
   plugins: [
+    replace({
+      'process.env.NODE_ENV': JSON.stringify('production')
+    }),
     resolve()
   ]
 };

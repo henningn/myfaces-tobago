@@ -31,6 +31,7 @@ class TobagoPopover extends HTMLElement {
   }
 
   connectedCallback(): void {
+
     this.popover = new Popover(this.trigger, {
       container: this.menuStore
     });
