@@ -1625,8 +1625,6 @@ tobago-separator {
   }
 }
 
-/* sheet -------------------------------------------------------------- */
-
 tobago-sheet {
   display: flex;
   flex-direction: column;
@@ -1636,6 +1634,7 @@ tobago-sheet {
   }
 
   header {
+    display: flex;
     overflow-x: hidden;
     flex-shrink: 0; //if "column" attribute used: header must remain same height (fix overflow hidden)
 
@@ -1645,6 +1644,18 @@ tobago-sheet {
       th {
         position: relative;
         overflow: hidden;
+      }
+    }
+
+    .table.tobago-scrollbar-filler {
+      display: none;
+
+      &.tobago-show {
+        display: table;
+      }
+
+      th {
+        padding: 0;
       }
     }
   }
@@ -1719,10 +1730,6 @@ tobago-sheet {
       td {
         overflow: hidden;
 
-        &.tobago-behavior-container {
-          display: none;
-        }
-
         @include treeNodeMarginLeftLevel();
 
         > input.tobago-selected {
@@ -1745,6 +1752,12 @@ tobago-sheet {
           }
         }
       }
+    }
+  }
+
+  header th, .tobago-body th, .tobago-body td {
+    &.tobago-behavior-container {
+      display: none;
     }
   }
 

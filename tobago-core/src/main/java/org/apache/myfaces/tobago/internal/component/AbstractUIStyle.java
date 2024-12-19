@@ -152,6 +152,10 @@ public abstract class AbstractUIStyle extends UIComponentBase {
 
   public abstract void setWidth(Measure width);
 
+  public abstract String getWidthCalc();
+
+  public abstract void setWidthCalc(String value);
+
   public abstract CustomClass getCustomClass();
 
   public abstract Measure getMarginBottom();

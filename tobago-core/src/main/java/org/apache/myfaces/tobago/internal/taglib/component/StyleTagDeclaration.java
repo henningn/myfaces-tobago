@@ -81,6 +81,13 @@ public interface StyleTagDeclaration extends HasIdBindingAndRendered {
   void setWidth(String width);
 
   /**
+   * @param widthCalc set width as a CSS calc() value.
+   */
+  @TagAttribute()
+  @UIComponentTagAttribute()
+  void setWidthCalc(String widthCalc);
+
+  /**
    * @param height The height for the parent component.
    * @since 3.0.0
    */

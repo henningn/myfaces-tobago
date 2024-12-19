@@ -70,6 +70,7 @@ public class StyleRenderer<T extends AbstractUIStyle> extends RendererBase<T> {
     } else {
 
       final Measure width = component.getWidth();
+      final String widthCalc = component.getWidthCalc();
       final Measure height = component.getHeight();
       final Measure minWidth = component.getMinWidth();
       final Measure minHeight = component.getMinHeight();
@@ -104,6 +105,7 @@ public class StyleRenderer<T extends AbstractUIStyle> extends RendererBase<T> {
       // todo: backgroundPosition and zIndex
 
       if (width != null
+          || widthCalc != null
           || height != null
           || minWidth != null
           || minHeight != null
@@ -148,6 +150,9 @@ public class StyleRenderer<T extends AbstractUIStyle> extends RendererBase<T> {
         writer.writeText("{");
         if (width != null) {
           encodeStyle(writer, Styles.width, width.serialize());
+        }
+        if (widthCalc != null) {
+          encodeStyle(writer, Styles.width, widthCalc);
         }
         if (height != null) {
           encodeStyle(writer, Styles.height, height.serialize());

@@ -16,7 +16,6 @@
  */
 
 import {Page} from "./tobago-page";
-import {Key} from "./tobago-key";
 import {Css} from "./tobago-css";
 import {ClientBehaviors} from "./tobago-client-behaviors";
 import {ColumnSelector} from "./tobago-column-selector";
@@ -92,97 +91,10 @@ export class Sheet extends HTMLElement {
       this.columnSelector = new ColumnSelector(this);
     }
 
-    // synchronize column widths ----------------------------------------------------------------------------------- //
-
-    // basic idea: there are two possible sources for the sizes:
-    // 1. the columns attribute of <tc:sheet> like {"columns":[1.0,1.0,1.0]}, held by data attribute "tobago-layout"
-    // 2. the hidden field which may contain a value like ",300,200,100,"
-    //
-    // The 1st source usually is the default set by the developer.
-    // The 2nd source usually is the value set by the user manipulating the column widths.
-    //
-    // So, if the 2nd is set, we use it, if not set, we use the 1st source.
-
-    const columnWidths = this.loadColumnWidths();
-    console.info("columnWidths: %s", JSON.stringify(columnWidths));
-    if (columnWidths && columnWidths.length === 0) { // active, but empty
-      // otherwise use the layout definition
-      let tokens: any[] = JSON.parse(this.dataset.tobagoLayout).columns;
-      const columnRendered = this.isColumnRendered();
-
-      const headerCols = this.getHeaderCols();
-      const bodyTable = this.getBodyTable();
-      const bodyCols = this.getBodyCols();
-      const borderLeftWidth
-          = Number(getComputedStyle(bodyTable.querySelector("td:first-child")).borderLeftWidth.slice(0, -2));
-      const borderRightWidth
-          = Number(getComputedStyle(bodyTable.querySelector("td:last-child")).borderRightWidth.slice(0, -2));
-      const tableWidth = bodyTable.offsetWidth - (borderLeftWidth + borderRightWidth) / 2;
-
-      console.assert(headerCols.length - 1 === bodyCols.length,
-          "header and body column number doesn't match: %d != %d ", headerCols.length - 1, bodyCols.length);
-
-      while (tokens.length < headerCols.length - 2) {
-        tokens = [...tokens, ...tokens];
-      }
-      tokens = tokens.slice(0, headerCols.length - 2);
-
-      let sumRelative = 0; // tbd: is this needed?
-      let widthRelative = tableWidth;
-      let r = 0;
-      for (let i = 0; i < tokens.length; i++) {
-        if (columnRendered[i]) {
-          if (typeof tokens[i] === "number") {
-            sumRelative += tokens[i];
-          } else if (typeof tokens[i] === "object" && tokens[i].measure !== undefined) {
-            const intValue = parseInt(tokens[i].measure);
-            if (tokens[i].measure.lastIndexOf("px") > 0) {
-              widthRelative -= intValue;
-            } else if (tokens[i].measure.lastIndexOf("%") > 0) {
-              widthRelative -= tableWidth * intValue / 100;
-            }
-          } else if (tokens[i] === "auto") {
-            const value = headerCols.item(r).offsetWidth;
-            widthRelative -= value;
-            tokens[i] = {measure: `${value}px`}; // converting "auto" to a specific value
-          } else {
-            console.debug("(layout columns a) auto? token[i]='%s' i=%i", tokens[i], i);
-          }
-        }
-      }
-      if (widthRelative < 0) {
-        widthRelative = 0;
-      }
-
-      r = 0;
-      for (let i = 0; i < tokens.length; i++) {
-        let colWidth = 0;
-        if (columnRendered[i]) {
-          if (typeof tokens[i] === "number") {
-            colWidth = tokens[i] * widthRelative / sumRelative;
-          } else if (typeof tokens[i] === "object" && tokens[i].measure !== undefined) {
-            const intValue = parseInt(tokens[i].measure);
-            if (tokens[i].measure.lastIndexOf("px") > 0) {
-              colWidth = intValue;
-            } else if (tokens[i].measure.lastIndexOf("%") > 0) {
-              colWidth = tableWidth * intValue / 100;
-            }
-          } else {
-            console.debug("(layout columns b) auto? token[i]='%s' i=%i", tokens[i], i);
-          }
-          if (colWidth > 0) { // because tokens[i] == "auto"
-            headerCols.item(r).setAttribute("width", String(colWidth));
-            bodyCols.item(r).setAttribute("width", String(colWidth));
-          }
-          r++;
-        }
-      }
-    }
-    this.addHeaderFillerWidth();
+    this.initScrollbarFiller();
 
     // resize column: mouse events -------------------------------------------------------------------------------- //
-
-    for (const resizeElement of this.querySelectorAll(".tobago-resize")) {
+    for (const resizeElement of this.querySelectorAll(":scope > header > table > thead > tr > th > .tobago-resize")) {
       resizeElement.addEventListener("click", function (): boolean {
         return false;
       });
@@ -205,7 +117,7 @@ export class Sheet extends HTMLElement {
     sheetBody.addEventListener("scroll", this.scrollAction.bind(this));
 
     // add selection listeners ------------------------------------------------------------------------------------ //
-    this.getRowElements().forEach((row) => this.initSelectionListener(row));
+    this.rowElements.forEach((row) => this.initSelectionListener(row));
     if (this.columnSelector && this.columnSelector.headerElement.type === "checkbox") {
       this.columnSelector.headerElement.addEventListener("click", this.initSelectAllCheckbox.bind(this));
     }
@@ -364,12 +276,24 @@ export class Sheet extends HTMLElement {
     }
   }
 
+  get header(): HTMLElement {
+    return this.querySelector(":scope > header");
+  }
+
+  get scrollbarFiller(): HTMLTableElement {
+    return this.header?.querySelector(":scope > table.tobago-scrollbar-filler");
+  }
+
   get sheetBody(): HTMLDivElement {
-    return this.querySelector(".tobago-body");
+    return this.querySelector(":scope > .tobago-body");
   }
 
   get tableBody(): HTMLTableSectionElement {
-    return this.querySelector(".tobago-body tbody");
+    return this.sheetBody.querySelector(":scope > table > tbody");
+  }
+
+  get rowElements(): NodeListOf<HTMLTableRowElement> {
+    return this.tableBody.querySelectorAll(":scope > tr");
   }
 
   get firstVisibleRowIndex(): number {
@@ -611,10 +535,33 @@ Type: ${data.type}`);
     return JSON.parse(hidden.getAttribute("value")) as boolean[];
   }
 
-  addHeaderFillerWidth(): void {
-    const last = document.getElementById(this.id).querySelector("tobago-sheet header table col:last-child");
-    if (last) {
-      last.setAttribute("width", String(Sheet.SCROLL_BAR_SIZE));
+  private initScrollbarFiller(): void {
+    // set width of the scrollbar filler
+    if (this.scrollbarFiller) {
+      /* Use min/maxWidth instead of width to force the browser to use the exact px value. Otherwise it is possible,
+      that the browser use 14,785px instead of 15px. */
+      this.scrollbarFiller.style.minWidth = Sheet.SCROLL_BAR_SIZE + "px";
+      this.scrollbarFiller.style.maxWidth = Sheet.SCROLL_BAR_SIZE + "px";
+
+      this.updateScrollbarFillerVisibility();
+
+      // Initialize observer to show/hide scrollbar filler, depending on whether the sheet body has a scrollbar or not.
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.target === this.sheetBody) {
+            this.updateScrollbarFillerVisibility();
+          }
+        }
+      });
+      resizeObserver.observe(this.sheetBody);
+    }
+  }
+
+  private updateScrollbarFillerVisibility() {
+    if (this.sheetBody.offsetWidth > this.sheetBody.clientWidth) {
+      this.scrollbarFiller.classList.add(Css.TOBAGO_SHOW);
+    } else {
+      this.scrollbarFiller.classList.remove(Css.TOBAGO_SHOW);
     }
   }
 
@@ -624,6 +571,14 @@ Type: ${data.type}`);
 
     // begin resizing
     console.debug("down");
+    this.getHeaderCols().forEach((col, i) => {
+      if (!col.classList.contains(Css.TOBAGO_ROW_FILLER) && !col.classList.contains(Css.TOBAGO_BEHAVIOR_CONTAINER)) {
+        col.style.width = getComputedStyle(col).width;
+      } else if (col.classList.contains(Css.TOBAGO_ROW_FILLER)) {
+        col.style.width = "auto";
+      }
+      this.getBodyCols().item(i).style.width = col.style.width;
+    });
 
     const resizeElement = event.currentTarget as HTMLElement;
     const columnIndex = parseInt(resizeElement.dataset.tobagoColumnIndex);
@@ -631,7 +586,7 @@ Type: ${data.type}`);
     this.mousemoveData = {
       columnIndex: columnIndex,
       originalClientX: event.clientX,
-      originalHeaderColumnWidth: parseInt(headerColumn.getAttribute("width")),
+      originalHeaderColumnWidth: parseInt(getComputedStyle(headerColumn).width),
       mousemoveListener: this.mousemove.bind(this),
       mouseupListener: this.mouseup.bind(this)
     };
@@ -640,68 +595,33 @@ Type: ${data.type}`);
     document.addEventListener("mouseup", this.mousemoveData.mouseupListener);
   }
 
-  mousemove(event: MouseEvent): boolean {
-    console.debug("move");
+  private mousemove(event: MouseEvent): void {
     let delta = event.clientX - this.mousemoveData.originalClientX;
     delta = -Math.min(-delta, this.mousemoveData.originalHeaderColumnWidth - 10);
     const columnWidth = this.mousemoveData.originalHeaderColumnWidth + delta;
-    this.getHeaderCols().item(this.mousemoveData.columnIndex).setAttribute("width", String(columnWidth));
-    this.getBodyCols().item(this.mousemoveData.columnIndex).setAttribute("width", String(columnWidth));
+    this.getHeaderCols().item(this.mousemoveData.columnIndex).style.width = columnWidth + "px";
+    this.getBodyCols().item(this.mousemoveData.columnIndex).style.width = columnWidth + "px";
     if (window.getSelection) {
       window.getSelection().removeAllRanges();
     }
-    return false;
   }
 
-  mouseup(event: MouseEvent): boolean {
+  private mouseup(event: MouseEvent): void {
     console.debug("up");
 
     // switch off the mouse move listener
     document.removeEventListener("mousemove", this.mousemoveData.mousemoveListener);
     document.removeEventListener("mouseup", this.mousemoveData.mouseupListener);
-    // copy the width values from the header to the body, (and build a list of it)
-    const tokens: any[] = JSON.parse(this.dataset.tobagoLayout).columns;
-    const columnRendered = this.isColumnRendered();
-    const columnWidths = this.loadColumnWidths();
-
-    const bodyTable = this.getBodyTable();
-    const headerCols = this.getHeaderCols();
-    const bodyCols = this.getBodyCols();
     const widths: number[] = [];
-    let usedWidth = 0;
-    let headerBodyColCount = 0;
-    for (let i = 0; i < columnRendered.length; i++) {
-      if (columnRendered[i]) {
-        // last column is the filler column
-        const newWidth = parseInt(headerCols.item(headerBodyColCount).getAttribute("width"));
-        // for the hidden field
-        widths[i] = newWidth;
-        usedWidth += newWidth;
 
-        const oldWidth = parseInt(bodyCols.item(headerBodyColCount).getAttribute("width"));
-        if (oldWidth !== newWidth) {
-          bodyCols.item(headerBodyColCount).setAttribute("width", String(newWidth));
-        }
-        headerBodyColCount++;
-      } else if (columnWidths !== undefined && columnWidths.length >= i) {
-        widths[i] = columnWidths[i];
-      } else {
-        if (typeof tokens[i] === "number") {
-          widths[i] = 100;
-        } else if (typeof tokens[i] === "object" && tokens[i].measure !== undefined) {
-          const intValue = parseInt(tokens[i].measure);
-          if (tokens[i].measure.lastIndexOf("px") > 0) {
-            widths[i] = intValue;
-          } else if (tokens[i].measure.lastIndexOf("%") > 0) {
-            widths[i] = parseInt(bodyTable.style.width) / 100 * intValue;
-          }
-        }
+    this.getHeaderCols().forEach((col, i) => {
+      if (!col.classList.contains(Css.TOBAGO_ROW_FILLER) && !col.classList.contains(Css.TOBAGO_BEHAVIOR_CONTAINER)) {
+        widths[i] = parseInt(getComputedStyle(col).width);
       }
-    }
+    });
 
     // store the width values in a hidden field
     this.saveColumnWidths(widths);
-    return false;
   }
 
   scrollAction(event: Event): void {
@@ -832,7 +752,7 @@ Type: ${data.type}`);
       }
     } else {
       const rowIndexes: number[] = [];
-      this.getRowElements().forEach((rowElement) => {
+      this.rowElements.forEach((rowElement) => {
         if (rowElement.hasAttribute("row-index")) {
           rowIndexes.push(Number(rowElement.getAttribute("row-index")));
         }
@@ -859,7 +779,7 @@ Type: ${data.type}`);
   private syncSelected(event: CustomEvent) {
     const selected = event ? event.detail.selection : this.selected;
 
-    this.getRowElements().forEach((rowElement) => {
+    this.rowElements.forEach((rowElement) => {
       const isColumnPanel = rowElement.classList.contains(Css.TOBAGO_COLUMN_PANEL);
       const rowIndex = Number(isColumnPanel ? rowElement.getAttribute("name") : rowElement.getAttribute("row-index"));
       const inputElement = !isColumnPanel ? this.columnSelector?.rowElement(rowElement) : null;
