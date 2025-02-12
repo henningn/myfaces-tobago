@@ -15,11 +15,19 @@
  * limitations under the License.
  */
 
-import "./demo-alert";
-import "./demo-copy-to-clipboard";
-import "./demo-date";
-import "./demo-highlight";
-import "./demo-inspect";
-import "./demo-login";
-import "./demo-sidemenu";
-import "./demo-test";
+class DemoSidemenu extends HTMLElement {
+
+  constructor() {
+    super();
+  }
+
+  connectedCallback(): void {
+    console.log("hello world");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function (event: Event): void {
+  if (window.customElements.get("demo-sidemenu") == null) {
+    window.customElements.define("demo-sidemenu", DemoSidemenu);
+  }
+});
