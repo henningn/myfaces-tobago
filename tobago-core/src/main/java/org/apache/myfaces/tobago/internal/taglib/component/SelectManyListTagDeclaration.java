@@ -20,6 +20,7 @@
 package org.apache.myfaces.tobago.internal.taglib.component;
 
 import org.apache.myfaces.tobago.apt.annotation.Behavior;
+import org.apache.myfaces.tobago.apt.annotation.Facet;
 import org.apache.myfaces.tobago.apt.annotation.Markup;
 import org.apache.myfaces.tobago.apt.annotation.Preliminary;
 import org.apache.myfaces.tobago.apt.annotation.Tag;
@@ -27,7 +28,9 @@ import org.apache.myfaces.tobago.apt.annotation.TagAttribute;
 import org.apache.myfaces.tobago.apt.annotation.UIComponentTag;
 import org.apache.myfaces.tobago.apt.annotation.UIComponentTagAttribute;
 import org.apache.myfaces.tobago.component.ClientBehaviors;
+import org.apache.myfaces.tobago.component.Facets;
 import org.apache.myfaces.tobago.component.RendererTypes;
+import org.apache.myfaces.tobago.internal.component.AbstractUIFilter;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasAutoSpacing;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasBinding;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasConverter;
@@ -39,6 +42,7 @@ import org.apache.myfaces.tobago.internal.taglib.declaration.HasId;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasLabel;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasLabelLayout;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasLocalMenu;
+import org.apache.myfaces.tobago.internal.taglib.declaration.HasPlaceholder;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasRequiredMessageForSelect;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasTabIndex;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasTip;
@@ -65,7 +69,14 @@ import javax.faces.component.UISelectMany;
     uiComponentFacesClass = "javax.faces.component.UISelectMany",
     componentFamily = UISelectMany.COMPONENT_FAMILY,
     rendererType = RendererTypes.SELECT_MANY_LIST,
-    allowedChildComponents = {"javax.faces.SelectItem", "javax.faces.SelectItems"},
+    allowedChildComponents = {
+        "javax.faces.SelectItem",
+        "javax.faces.SelectItems",
+        AbstractUIFilter.COMPONENT_FAMILY
+    },
+    facets = {
+        @Facet(name = Facets.FOOTER, description = "The footer is shown if the result list is empty.")
+    },
     behaviors = {
         @Behavior(name = ClientBehaviors.CHANGE, isDefault = true),
         @Behavior(name = ClientBehaviors.CLICK),
@@ -88,7 +99,7 @@ public interface SelectManyListTagDeclaration
     extends HasId, IsDisabled, IsRendered, HasBinding, HasTip, HasHelp,
     IsReadonly, HasConverter, IsRequiredForSelect, HasLabel, HasValidator, HasValueChangeListener, HasLabelLayout,
     HasValidatorMessage, HasConverterMessage, HasRequiredMessageForSelect, HasTabIndex, IsFocus, IsVisual,
-    HasAutoSpacing, HasFilter, IsExpanded, HasDecorationPosition, HasLocalMenu {
+    HasAutoSpacing, HasFilter, IsExpanded, HasDecorationPosition, HasLocalMenu, HasPlaceholder {
 
   /**
    * The value of the multi select.
@@ -96,4 +107,12 @@ public interface SelectManyListTagDeclaration
   @TagAttribute
   @UIComponentTagAttribute(type = {"java.lang.Object[]", "java.util.List"})
   void setValue(String value);
+
+  /**
+   * If set, the footer is always visible (true) or always hidden (false).
+   * By default, the footer is shown if the result list is empty.
+   */
+  @TagAttribute
+  @UIComponentTagAttribute(type = "java.lang.Boolean")
+  void setShowFooter(String showFooter);
 }

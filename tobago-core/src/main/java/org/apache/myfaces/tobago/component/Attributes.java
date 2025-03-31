@@ -382,6 +382,7 @@ public enum Attributes {
   showCheckbox,
   showDirectLinks,
   showDirectLinksArrows,
+  showFooter,
   showHeader,
   showJunctions,
   showNavigationBar,
