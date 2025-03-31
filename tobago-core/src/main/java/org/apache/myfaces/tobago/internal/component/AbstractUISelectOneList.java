@@ -20,11 +20,20 @@
 package org.apache.myfaces.tobago.internal.component;
 
 import org.apache.myfaces.tobago.component.SupportFieldId;
+import org.apache.myfaces.tobago.internal.util.SelectItemUtils;
 import org.apache.myfaces.tobago.util.ComponentUtils;
 
+import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractUISelectOneList extends AbstractUISelectOneBase implements SupportFieldId {
+
+  private transient Optional<UIComponent> filteredSelectItemsOptional = null; //set "null" to detect if initialized
+  private transient List<SelectItem> itemList = null;
 
   @Override
   public String getFieldId(final FacesContext facesContext) {
@@ -36,4 +45,42 @@ public abstract class AbstractUISelectOneList extends AbstractUISelectOneBase im
   public abstract boolean isExpanded();
 
   public abstract boolean isLocalMenu();
+
+  public abstract String getFooter();
+
+  public AbstractUIFilteredSelectItems getAbstractUIFilteredSelectItems() {
+    if (filteredSelectItemsOptional == null) {
+      filteredSelectItemsOptional = getChildren().stream()
+          .filter(AbstractUIFilteredSelectItems.class::isInstance)
+          .findFirst();
+    }
+    return (AbstractUIFilteredSelectItems) filteredSelectItemsOptional.orElse(null);
+  }
+
+  public List<SelectItem> getItemList(FacesContext facesContext) {
+    final AbstractUIFilteredSelectItems abstractUIFilteredSelectItems = getAbstractUIFilteredSelectItems();
+    if (abstractUIFilteredSelectItems != null) {
+      if (itemList == null) {
+        abstractUIFilteredSelectItems.updateMissingSelectedItems(facesContext, this, getValue());
+
+        itemList = SelectItemUtils.getItemList(facesContext, this);
+
+        List<?> missingSelectedValues = abstractUIFilteredSelectItems.getMissingSelectedValues(facesContext, this);
+        List<SelectItem> removeSelectItems = new ArrayList<>();
+        for (SelectItem selectItem : itemList.subList(missingSelectedValues.size(), itemList.size())) {
+          if (missingSelectedValues.contains(selectItem.getValue())) {
+            removeSelectItems.add(selectItem);
+          }
+        }
+        for (SelectItem selectItem : removeSelectItems) {
+          missingSelectedValues.remove(selectItem.getValue());
+          itemList.remove(selectItem);
+        }
+      }
+
+      return itemList;
+    } else {
+      return SelectItemUtils.getItemList(facesContext, this);
+    }
+  }
 }

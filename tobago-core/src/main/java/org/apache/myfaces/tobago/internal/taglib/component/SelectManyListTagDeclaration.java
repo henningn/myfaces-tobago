@@ -20,6 +20,7 @@
 package org.apache.myfaces.tobago.internal.taglib.component;
 
 import org.apache.myfaces.tobago.apt.annotation.Behavior;
+import org.apache.myfaces.tobago.apt.annotation.Facet;
 import org.apache.myfaces.tobago.apt.annotation.Markup;
 import org.apache.myfaces.tobago.apt.annotation.Preliminary;
 import org.apache.myfaces.tobago.apt.annotation.Tag;
@@ -27,6 +28,7 @@ import org.apache.myfaces.tobago.apt.annotation.TagAttribute;
 import org.apache.myfaces.tobago.apt.annotation.UIComponentTag;
 import org.apache.myfaces.tobago.apt.annotation.UIComponentTagAttribute;
 import org.apache.myfaces.tobago.component.ClientBehaviors;
+import org.apache.myfaces.tobago.component.Facets;
 import org.apache.myfaces.tobago.component.RendererTypes;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasAutoSpacing;
 import org.apache.myfaces.tobago.internal.taglib.declaration.HasBinding;
@@ -66,6 +68,10 @@ import javax.faces.component.UISelectMany;
     componentFamily = UISelectMany.COMPONENT_FAMILY,
     rendererType = RendererTypes.SELECT_MANY_LIST,
     allowedChildComponents = {"javax.faces.SelectItem", "javax.faces.SelectItems"},
+    facets = {
+        @Facet(name = Facets.FOOTER, description = "Replace the no-entries footer at the end of the result list with a"
+            + " custom footer. If no elements are rendered, the custom footer is hidden.")
+    },
     behaviors = {
         @Behavior(name = ClientBehaviors.CHANGE, isDefault = true),
         @Behavior(name = ClientBehaviors.CLICK),
@@ -96,4 +102,12 @@ public interface SelectManyListTagDeclaration
   @TagAttribute
   @UIComponentTagAttribute(type = {"java.lang.Object[]", "java.util.List"})
   void setValue(String value);
+
+  /**
+   * Replace the no-entries footer at the end of the result list with a custom footer. The text in the custom footer is
+   * set by this attribute. If the string is empty, the footer is hidden.
+   */
+  @TagAttribute
+  @UIComponentTagAttribute
+  void setFooter(String footer);
 }
