@@ -56,6 +56,31 @@ public class SelectManyShuttleController implements Serializable {
 
   public void setSelectedPlanets(final SolarObject[] selectedPlanets) {
     this.selectedPlanets = selectedPlanets;
+
+    final List<SolarObject> selectedList = Arrays.asList(selectedPlanets);
+    planets.sort((o1, o2) -> {
+      final int i1 = indexOf(selectedList, o1);
+      final int i2 = indexOf(selectedList, o2);
+
+      if (i1 >= 0 && i2 >= 0) {
+        return i1 - i2;
+      } else if (i1 >= 0) {
+        return 1;
+      } else if (i2 >= 0) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+  }
+
+  private int indexOf(final List<SolarObject> list, final SolarObject planet) {
+    for (int i = 0; i < list.size(); i++) {
+      if (list.get(i).getName().equals(planet.getName())) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   public String getSelectedPlanetsAsString() {
