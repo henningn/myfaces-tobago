@@ -23,6 +23,25 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:f="jakarta.faces.core">
 
+  <p>Create a new theme based on the standard theme.
+  The Github repository contains a package.json, which means it can be added as a dependency in NPM.
+    Make sure to import "node_modules/myfaces-tobago/tobago-theme/src/main/scss/tobago" in your SCSS.
+
+    _tobago.scss expect to find Bootstrap in "node_modules/bootstrap/".
+    Bootstrap is a dependency of the Tobago Github NPM Dependency.
+
+    Because the Tobago theme is based on Bootstrap, you can use the Bootstrap variabled to adjust the basic style of the
+    theme.
+
+    tobago-config.xml:
+    odering: after tobago-theme-standard
+    example: see roxborough theme
+
+    Overriding keys with [Themename]Bundle.
+
+
+  </p>
+
   <p>Tobago supports a big variety of displaying controls, so called designs or themes.</p>
 
   <p>It comes with several predefined themes, each with its own visual characteristics:</p>
