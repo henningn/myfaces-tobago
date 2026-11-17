@@ -65,9 +65,9 @@
       The <code class="language-markup">&lt;tc:treeIndent/></code> tag, which add an indent besides a node
       and <code class="language-markup">&lt;tc:treeLabel value="\#{node.userObject.name}"/></code>, which contain the
       String for the label. Notice that 'node' is the value of the <code>var</code> attribute from the tree tag.</p>
-    <tc:tree value="#{treeController.sample}" var="node">
+    <tc:tree id="simpleTree" value="#{treeController.sample}" var="node">
       <tc:treeNode>
-        <tc:treeIndent/>
+        <tc:treeIndent id="simpleTreeIndent"/>
         <tc:treeLabel value="#{node.userObject.name}"/>
       </tc:treeNode>
     </tc:tree>
@@ -78,7 +78,7 @@
       <code class="language-markup">&lt;tc:treeIcon value="..." closed="..." open="..."/></code>
       where the values could be an icon or a URL to an image.</p>
     <tc:segmentLayout medium="6seg">
-      <tc:tree value="#{treeController.sample}" var="node">
+      <tc:tree id="treeIconWithIndent" value="#{treeController.sample}" var="node">
         <tc:treeNode>
           <tc:treeIndent/>
           <tc:treeIcon value="bi-file-earmark"
@@ -88,7 +88,7 @@
         </tc:treeNode>
       </tc:tree>
 
-      <tc:tree value="#{treeController.sample}" var="node">
+      <tc:tree id="treeIconWithoutIndent" value="#{treeController.sample}" var="node">
         <tc:treeNode>
           <tc:treeIcon closed="#{request.contextPath}/image/feather-closed.png"
                        open="#{request.contextPath}/image/feather-open.png"/>
