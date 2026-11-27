@@ -170,6 +170,7 @@ public class SelectItemUtils {
         final Object value = currentUISelectItems.getValue();
 
         // comment one
+        //comment two
         if (value instanceof SelectItem) {
           nextItem = (SelectItem) value;
           return true;
