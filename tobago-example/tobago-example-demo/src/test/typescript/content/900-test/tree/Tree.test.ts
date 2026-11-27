@@ -152,4 +152,5 @@ test.describe("900-test/tree/Tree.xhtml", () => {
   }
 
   //comment 1
+  //comment 2
 });
