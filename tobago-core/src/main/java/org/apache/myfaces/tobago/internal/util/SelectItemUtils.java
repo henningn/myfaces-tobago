@@ -169,6 +169,7 @@ public class SelectItemUtils {
         currentUISelectItems = (UISelectItems) child;
         final Object value = currentUISelectItems.getValue();
 
+        // comment one
         if (value instanceof SelectItem) {
           nextItem = (SelectItem) value;
           return true;
