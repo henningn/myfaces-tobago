@@ -150,4 +150,6 @@ test.describe("900-test/tree/Tree.xhtml", () => {
     await expect(ngcNode).toBeVisible({visible: categoryExpanded && scienceExpanded && astronomyExpanded && picturesExpanded});
     await expect(messierNode).toBeVisible({visible: categoryExpanded && scienceExpanded && astronomyExpanded && picturesExpanded});
   }
+
+  //comment 1
 });
